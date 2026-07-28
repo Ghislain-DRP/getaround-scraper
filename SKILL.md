@@ -270,3 +270,31 @@ GETAROUND_CITIES=puteaux,courbevoie python3 skills/getaround-scraper/scripts/scr
 | A2 (17h00) | `0 0 17 * * *` | Tous les jours à 17h00 |
 | A2 (21h00) | `0 0 21 * * *` | Tous les jours à 21h00 |
 | B | `0 0 10 * * 3,4,5` | Mer/Jeu/Ven à 10h00 |
+
+---
+
+## Historique des changements API Getaround
+
+> **Principe** : Getaround modifie son API et ses URLs sans préavis. Tout appel qui en dépend est fragile par construction. Documenter ici chaque rupture observée.
+
+| Date | Changement | Impact | Statut |
+|---|---|---|---|
+| 26/07/2026 | `search.json?car_types[]=X` retournait les catégories officielles | Filtre type véhicule via API | **Cassé** |
+| 28/07/2026 | `search.json?car_types[]=X` renvoie HTTP 500 | Aucun filtre officiel disponible | **Cassé** |
+| 28/07/2026 | URL GPS `/location-voiture/france?address={lat},{lng}&...` redirige vers l'accueil | Pipeline A2 retourne 0 annonces | **Cassé** |
+| 28/07/2026 | Nouvelle URL GPS : `/search?latitude={lat}&longitude={lng}&start_date=...&end_date=...&country_scope=FR&display_view=list` | Migration v3.3 | **Corrigé** |
+| 28/07/2026 | Sélecteur cartes : `a[href*="/location-voiture/"]` → `[data-car-page-url]` sur page `/search` | Migration v3.3 | **Corrigé** |
+| 28/07/2026 | Bouton pagination : texte "Afficher plus" → classe `search-results__load-more-button` | Migration v3.3 | **Corrigé** |
+
+### Segmentation : Option A provisoire (SEGMENT\_RULES)
+
+En l'absence d'endpoint stable pour les catégories officielles Getaround, la segmentation est assurée par `SEGMENT_RULES` dans `analyse.py` (inférence par regex sur le modèle). Le champ `source_taxonomie` vaut `"SEGMENT_RULES"` dans tous les CSV. Quand un endpoint stable sera disponible, la valeur passera à `"GETAROUND_OFFICIEL"` — ne jamais mélanger les deux valeurs dans un même historique sans purge préalable.
+
+### Throttling vs changement structurel
+
+Getaround applique un throttling agressif en soirée après une série de requêtes depuis la même IP. Chronologie observée :
+- Run réussi à 15h16 avec 1 156 annonces
+- Blocage à partir de 21h après tests intensifs
+- Le throttling se lève en 30 à 60 minutes sans aucune requête
+
+**Procédure de diagnostic** : attendre 1h sans requête, relancer un run A2. Si 0 annonces persistent, c'est un changement structurel (pas du throttling).

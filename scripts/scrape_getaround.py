@@ -7,13 +7,16 @@ Trois pipelines :
   A2 — Détection de réservation      : 4x/jour à 08h30/13h/17h/21h, fenêtre J+1 09h00→20h00
   B  — Pricing week-end              : mer/jeu/ven à 10h00, fenêtre sam 08h00→dim 20h00
 
-Architecture v3.2 :
-  - Branche GPS (A2) : page.evaluate() + pagination par clic "Afficher plus"
+Architecture v3.3 :
+  - Branche GPS (A2) : URL /search?latitude=...&longitude=... + pagination par clic
     → MAX_CLICS=50, ~40 cartes/clic, couverture ≥ 95% par point
   - 3 points GPS fixes A2 : Puteaux, Asnières-sur-Seine, Paris 17e
   - Branche SEO (A1/B) : URL par commune, scraping HTML classique
   - Nouveaux champs : distance_recherche, nb_resultats_total, nb_clics_pagination
   - version_collecte tracée dans chaque ligne CSV et dans le QC JSON
+  - v3.3 : migration URL /search (Getaround a supprimé /location-voiture/france?address=...)
+    Sélecteur : [data-car-page-url] au lieu de a[href*="/location-voiture/"]
+    Bouton pagination : 'Afficher plus de résultats' (classe search-results__load-more-button)
 
 Règles non négociables :
   - Ne jamais inventer une valeur (champ absent = vide, pas de valeur par défaut)
@@ -46,7 +49,7 @@ from analyse import generate_synthesis, load_json, infer_segment, infer_energie
 
 # ─── Version ─────────────────────────────────────────────────────────────────
 
-VERSION_COLLECTE = "v3.2-pagination-gps"
+VERSION_COLLECTE = "v3.3-search-gps"
 
 
 # ─── 36 communes du département 92 ───────────────────────────────────────────
@@ -206,7 +209,52 @@ def extract_annonce_id(url: str) -> str:
 
 # ─── JS d'extraction des cartes ──────────────────────────────────────────────
 
-JS_CARDS = r"""
+JS_CARDS_SEARCH = r"""
+() => {
+    const cards = [];
+    const seen = new Set();
+    // v3.3 : sélecteur data-car-page-url (page /search)
+    const cardEls = document.querySelectorAll('[data-car-page-url]');
+    cardEls.forEach(el => {
+        const pageUrl = el.getAttribute('data-car-page-url') || '';
+        const m = pageUrl.match(/-(\d+)(?:\?|$)/);
+        if (!m) return;
+        const id = m[1];
+        if (seen.has(id)) return;
+        seen.add(id);
+        const fullText = el.innerText || '';
+        // Commune depuis l'URL
+        const communeM = pageUrl.match(/\/location-voiture\/([^\/]+)\//);
+        // Type connexion depuis le badge
+        const connM = fullText.match(/Getaround Connect/i);
+        const rdvM = fullText.match(/rendez-vous/i);
+        // Prix actuel (span.c-font-bold contenant €)
+        let prix_actuel = '';
+        const boldSpans = el.querySelectorAll('span.c-font-bold');
+        for (const sp of boldSpans) {
+            if (/€/.test(sp.innerText || '')) {
+                const pm = (sp.innerText || '').replace(/[\u202f\xa0]/g, '').match(/(\d+)/);
+                if (pm) { prix_actuel = pm[1]; break; }
+            }
+        }
+        cards.push({
+            id: id,
+            href: pageUrl.split('?')[0],
+            fullText: fullText,
+            prix_jour: prix_actuel,
+            prix_heure: '',
+            commune_annonce_slug: communeM ? communeM[1] : '',
+            type_connexion: connM ? 'Getaround Connect' : (rdvM ? 'Sur rendez-vous' : ''),
+            reservation_instantanee: /instantan/i.test(fullText),
+            livraison_disponible: /livraison/i.test(fullText),
+        });
+    });
+    return cards;
+}
+"""
+
+# JS pour la branche SEO (pages /location-voiture/{commune}) — structure inchangée depuis v3.2
+JS_CARDS_SEO = r"""
 () => {
     const cards = [];
     const links = document.querySelectorAll('a[href*="/location-voiture/"]');
@@ -220,8 +268,9 @@ JS_CARDS = r"""
         seen.add(id);
         const container = link.closest('article') || link.closest('li') || link.closest('[class*="car"]') || link.parentElement;
         const fullText = container ? container.innerText : link.innerText;
-        const priceM = fullText.match(/(\d+)\s*€\s*\/\s*jour/);
-        const priceHM = fullText.match(/(\d+)\s*€\s*\/\s*h/);
+        // Prix heure et jour depuis le texte (format: 'À partir de X € /h • Y € /jour')
+        const priceHM = fullText.match(/(\d+)\s*€\s*\/h/);
+        const priceM = fullText.match(/(\d+)\s*€\s*\/jour/);
         const communeM = href.match(/\/location-voiture\/([^\/]+)\//);
         const connM = fullText.match(/Getaround Connect/i);
         const rdvM = fullText.match(/rendez-vous|échange de clés/i);
@@ -243,7 +292,11 @@ JS_CARDS = r"""
 
 JS_HAS_BTN = r"""
 () => {
-    const btns = document.querySelectorAll('button, [role="button"]');
+    // v3.3 : bouton 'Afficher plus de résultats' (classe search-results__load-more-button)
+    const btn = document.querySelector('button.search-results__load-more-button');
+    if (btn && !btn.disabled && btn.offsetParent !== null) return true;
+    // Fallback : chercher par texte
+    const btns = document.querySelectorAll('button');
     for (const b of btns) {
         if (/afficher plus/i.test(b.innerText || '')) return true;
     }
@@ -253,10 +306,15 @@ JS_HAS_BTN = r"""
 
 JS_NB_RESULTS = r"""
 () => {
+    // v3.3 : pattern '40 résultats sur 910' → retourne 910 (total)
+    const allText = document.body ? document.body.innerText : '';
+    const m = allText.match(/(\d+)\s*résultats sur\s*(\d+)/);
+    if (m) return parseInt(m[2]);
+    // Fallback : chercher le total seul
     const els = document.querySelectorAll('[class*="result"], [class*="count"], h1, h2');
     for (const el of els) {
-        const m = (el.innerText || '').match(/(\d[\d\s]*)\s*(résultat|voiture|annonce)/i);
-        if (m) return parseInt(m[1].replace(/\s/g, ''));
+        const m2 = (el.innerText || '').match(/(\d[\d\s]*)\s*(résultat|voiture|annonce)/i);
+        if (m2) return parseInt(m2[1].replace(/\s/g, ''));
     }
     return null;
 }
@@ -279,21 +337,29 @@ async def scrape_gps_point(
     Scrape un point GPS par pagination complète (clic "Afficher plus").
     Retourne (liste_annonces, erreur_ou_None).
     """
+    # v3.3 : nouvelle URL /search (Getaround a supprimé /location-voiture/france?address=...)
+    # Dates au format YYYY-MM-DD (extraire depuis fenetre_debut/fin au format YYYY-MM-DDTHH:MM)
+    start_date = fenetre_debut[:10]
+    end_date = fenetre_fin[:10]
+    start_time = fenetre_debut[11:] if len(fenetre_debut) > 10 else "09:00"
+    end_time = fenetre_fin[11:] if len(fenetre_fin) > 10 else "20:00"
     url = (
-        f"https://fr.getaround.com/location-voiture/france"
-        f"?address={lat},{lng}"
-        f"&start_date={fenetre_debut}&end_date={fenetre_fin}"
-        f"&lat={lat}&lng={lng}"
+        f"https://fr.getaround.com/search"
+        f"?latitude={lat}&longitude={lng}"
+        f"&start_date={start_date}&start_time={start_time}"
+        f"&end_date={end_date}&end_time={end_time}"
+        f"&country_scope=FR&display_view=list"
+        f"&pickup_method_explicit_choice=true"
     )
 
     try:
         await page.goto(url, wait_until="domcontentloaded", timeout=30000)
         await asyncio.sleep(MIN_DELAY)
 
-        # Attendre le chargement initial des cartes
+        # Attendre le chargement initial des cartes (v3.3 : sélecteur data-car-page-url)
         try:
             await page.wait_for_selector(
-                'a[href*="/location-voiture/"]', timeout=10000
+                '[data-car-page-url]', timeout=15000
             )
         except Exception:
             pass
@@ -311,7 +377,11 @@ async def scrape_gps_point(
             try:
                 await page.evaluate(r"""
                     () => {
-                        const btns = document.querySelectorAll('button, [role="button"]');
+                        // v3.3 : clic sur le bouton search-results__load-more-button
+                        const btn = document.querySelector('button.search-results__load-more-button');
+                        if (btn && !btn.disabled) { btn.click(); return true; }
+                        // Fallback : chercher par texte
+                        const btns = document.querySelectorAll('button');
                         for (const b of btns) {
                             if (/afficher plus/i.test(b.innerText || '')) {
                                 b.click();
@@ -326,8 +396,8 @@ async def scrape_gps_point(
             except Exception:
                 break
 
-        # Extraire toutes les cartes visibles
-        raw_cards = await page.evaluate(JS_CARDS)
+        # Extraire toutes les cartes visibles (v3.3 : JS_CARDS_SEARCH pour page /search)
+        raw_cards = await page.evaluate(JS_CARDS_SEARCH)
 
         # ── Garde-fou run partiel ──────────────────────────────────────────────
         # Si le compteur Getaround annonce > 100 résultats mais qu'on n'a capté
@@ -356,14 +426,22 @@ async def scrape_gps_point(
             # Note et avis
             note, nb_avis = extract_note_avis(full_text)
 
-            # Modèle : première ligne non vide du texte avant "À partir de"
+            # Modèle : regex "Marque Modèle (Année)" sur page /search
+            # Fallback : première ligne non-badge, non-chiffre
+            _MODEL_YEAR_RE = re.compile(r'^(.+?)\s*\((\d{4})\)\s*$', re.MULTILINE)
+            _BADGES = {'GETAROUND CONNECT', 'SUR RENDEZ-VOUS', 'Pépite des locataires'}
             modele = ""
-            head = full_text.split("À partir de")[0].strip()
-            for line in head.splitlines():
-                line = line.strip()
-                if line and not re.match(r"^\d", line) and len(line) > 2:
-                    modele = line
-                    break
+            annee = ""
+            m_my = _MODEL_YEAR_RE.search(full_text)
+            if m_my:
+                modele = f"{m_my.group(1).strip()} ({m_my.group(2)})"
+                annee = m_my.group(2)
+            else:
+                for line in full_text.splitlines():
+                    line = line.strip()
+                    if line and line not in _BADGES and not re.match(r'^\d', line) and len(line) > 3:
+                        modele = line
+                        break
 
             # Commune annonce depuis l'URL
             commune_slug = card.get("commune_annonce_slug", "")
@@ -385,8 +463,8 @@ async def scrape_gps_point(
                 "fenetre_fin":           fenetre_fin,
                 "annonce_id":            annonce_id,
                 "url":                   f"https://fr.getaround.com{href}" if href.startswith("/") else href,
-                "modele":                full_text,  # texte brut complet pour extract_note_avis
-                "annee":                 "",
+                "modele":                modele,
+                "annee":                 annee,
                 "type_connexion":        card.get("type_connexion", ""),
                 "segment":               infer_segment(modele),
                 "energie":               infer_energie(modele, card.get("type_connexion", "")),
@@ -446,7 +524,7 @@ async def scrape_commune(
         except Exception:
             pass
 
-        raw_cards = await page.evaluate(JS_CARDS)
+        raw_cards = await page.evaluate(JS_CARDS_SEO)
 
         annonces = []
         rang = 0
@@ -933,7 +1011,7 @@ async def run_pipeline(pipeline: str, output_dir: Path, vehicles_file: Path):
 # ─── Point d'entrée ───────────────────────────────────────────────────────────
 
 def main():
-    parser = argparse.ArgumentParser(description="Getaround Scraper v3.2")
+    parser = argparse.ArgumentParser(description="Getaround Scraper v3.3")
     parser.add_argument(
         "--pipeline", "-p",
         choices=["A1", "A2", "B"],

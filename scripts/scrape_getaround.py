@@ -329,6 +329,19 @@ async def scrape_gps_point(
         # Extraire toutes les cartes visibles
         raw_cards = await page.evaluate(JS_CARDS)
 
+        # ── Garde-fou run partiel ──────────────────────────────────────────────
+        # Si le compteur Getaround annonce > 100 résultats mais qu'on n'a capté
+        # que < 100 cartes, la page a probablement redirigé vers l'accueil
+        # (throttling ou détection de bot). On refuse d'écrire un CSV vide.
+        MIN_ANNONCES_ATTENDUES = 100
+        if nb_total and int(str(nb_total)) >= MIN_ANNONCES_ATTENDUES and len(raw_cards) < MIN_ANNONCES_ATTENDUES:
+            raise RuntimeError(
+                f"RUN_PARTIEL : {len(raw_cards)} cartes captées alors que "
+                f"le compteur annonce {nb_total} résultats. "
+                f"Probable redirection vers l'accueil (throttling / bot-detection). "
+                f"Aucun CSV écrit."
+            )
+
         annonces = []
         rang = 0
         for card in raw_cards:
@@ -393,6 +406,7 @@ async def scrape_gps_point(
                 "distance_recherche":    distance_recherche,
                 "nb_resultats_total":    nb_total if nb_total is not None else "",
                 "nb_clics_pagination":   nb_clics,
+                "source_taxonomie":      "SEGMENT_RULES",
             })
 
         return annonces, None
@@ -486,6 +500,7 @@ async def scrape_commune(
                 "distance_recherche":    "",
                 "nb_resultats_total":    "",
                 "nb_clics_pagination":   "",
+                "source_taxonomie":      "SEGMENT_RULES",
             })
 
         return annonces, None
@@ -684,7 +699,7 @@ def build_qc_report(
 FIELDNAMES = [
     "snapshot_id", "pipeline", "version_collecte", "fenetre_debut", "fenetre_fin",
     "annonce_id", "url", "modele", "annee", "type_connexion",
-    "segment", "energie",
+    "segment", "source_taxonomie", "energie",
     "reservation_instantanee", "prix_jour", "prix_heure",
     "note", "nb_avis",
     "commune_recherche", "commune_annonce",

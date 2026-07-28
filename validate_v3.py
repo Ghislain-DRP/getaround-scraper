@@ -197,7 +197,7 @@ def t10_pipeline_c():
 def t11_fieldnames():
     scrape = SCRIPTS / "scrape_getaround.py"
     content = scrape.read_text(encoding="utf-8")
-    required = ["distance_recherche", "nb_resultats_total", "nb_clics_pagination", "version_collecte"]
+    required = ["distance_recherche", "nb_resultats_total", "nb_clics_pagination", "version_collecte", "source_taxonomie"]
     missing = [f for f in required if f not in content]
     if missing:
         fail("T11", f"Champs manquants dans FIELDNAMES : {missing}")

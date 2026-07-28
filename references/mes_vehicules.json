@@ -1,0 +1,335 @@
+[
+  {
+    "id_getaround": "1701291",
+    "immatriculation": "CC647AX",
+    "modele": "Volkswagen Golf",
+    "annee": 2012,
+    "statut": "Active",
+    "connexion": "Échange de clés",
+    "proprietaire": "C3"
+  },
+  {
+    "id_getaround": "1718469",
+    "immatriculation": "DJ709ND",
+    "modele": "Peugeot 5008",
+    "annee": 2014,
+    "statut": "Active",
+    "connexion": "Échange de clés",
+    "proprietaire": "C3"
+  },
+  {
+    "id_getaround": "1719415",
+    "immatriculation": "DD246YC",
+    "modele": "Volkswagen Polo",
+    "annee": 2014,
+    "statut": "Active",
+    "connexion": "Échange de clés",
+    "proprietaire": "C3"
+  },
+  {
+    "id_getaround": "1723359",
+    "immatriculation": "DY872FX",
+    "modele": "Volkswagen Polo",
+    "annee": 2017,
+    "statut": "Incomplète",
+    "connexion": "Connect",
+    "proprietaire": "C3"
+  },
+  {
+    "id_getaround": "1743579",
+    "immatriculation": "DH842CZ",
+    "modele": "Renault Clio",
+    "annee": 2014,
+    "statut": "Active",
+    "connexion": "Connect",
+    "proprietaire": "C3"
+  },
+  {
+    "id_getaround": "1743643",
+    "immatriculation": "DS608SZ",
+    "modele": "Renault Clio",
+    "annee": 2015,
+    "statut": "Active",
+    "connexion": "Connect",
+    "proprietaire": "C3"
+  },
+  {
+    "id_getaround": "1825239",
+    "immatriculation": "EK932TR",
+    "modele": "Renault Twingo III",
+    "annee": 2017,
+    "statut": "Active",
+    "connexion": "Connect",
+    "proprietaire": "C3"
+  },
+  {
+    "id_getaround": "1832153",
+    "immatriculation": "FM263KE",
+    "modele": "Volkswagen Tiguan",
+    "annee": 2015,
+    "statut": "Active",
+    "connexion": "Connect",
+    "proprietaire": "C3"
+  },
+  {
+    "id_getaround": "1832155",
+    "immatriculation": "DB706NK",
+    "modele": "Volkswagen Polo",
+    "annee": 2013,
+    "statut": "Active",
+    "connexion": "Échange de clés",
+    "proprietaire": "C3"
+  },
+  {
+    "id_getaround": "1832157",
+    "immatriculation": "FF953CA",
+    "modele": "Renault Clio",
+    "annee": 2019,
+    "statut": "Active",
+    "connexion": "Connect",
+    "proprietaire": "C3"
+  },
+  {
+    "id_getaround": "1832158",
+    "immatriculation": "DS487GS",
+    "modele": "Renault Clio",
+    "annee": 2015,
+    "statut": "Active",
+    "connexion": "Connect",
+    "proprietaire": "C3"
+  },
+  {
+    "id_getaround": "1832159",
+    "immatriculation": "FY585AL",
+    "modele": "Toyota Aygo II",
+    "annee": 2021,
+    "statut": "Active",
+    "connexion": "Connect",
+    "proprietaire": "C3"
+  },
+  {
+    "id_getaround": "1842730",
+    "immatriculation": "EQ220LG",
+    "modele": "Peugeot 5008",
+    "annee": 2017,
+    "statut": "Active",
+    "connexion": "Échange de clés",
+    "proprietaire": "C3"
+  },
+  {
+    "id_getaround": "1850231",
+    "immatriculation": "FF281DA",
+    "modele": "Peugeot 5008",
+    "annee": 2019,
+    "statut": "En attente",
+    "connexion": "Échange de clés",
+    "proprietaire": "C3"
+  },
+  {
+    "id_getaround": "1859070",
+    "immatriculation": "BQ202KP",
+    "modele": "Audi A1",
+    "annee": 2011,
+    "statut": "Active",
+    "connexion": "Échange de clés",
+    "proprietaire": "C3"
+  },
+  {
+    "id_getaround": "1913338",
+    "immatriculation": "FJ476HA",
+    "modele": "Ford C-Max",
+    "annee": 2019,
+    "statut": "Active",
+    "connexion": "Connect",
+    "proprietaire": "C3"
+  },
+  {
+    "id_getaround": "1931774",
+    "immatriculation": "GE608GA",
+    "modele": "Citroën C4",
+    "annee": 2022,
+    "statut": "Prête à être publiée",
+    "connexion": "Échange de clés",
+    "proprietaire": "C3"
+  },
+  {
+    "id_getaround": "1935525",
+    "immatriculation": "EA453JZ",
+    "modele": "Peugeot 208",
+    "annee": 2016,
+    "statut": "Incomplète",
+    "connexion": "Connect",
+    "proprietaire": "C3"
+  },
+  {
+    "id_getaround": "1935533",
+    "immatriculation": "EV484XR",
+    "modele": "Peugeot 2008",
+    "annee": 2018,
+    "statut": "Active",
+    "connexion": "Échange de clés",
+    "proprietaire": "C3"
+  },
+  {
+    "id_getaround": "1935539",
+    "immatriculation": "DS558PQ",
+    "modele": "Volkswagen Up!",
+    "annee": 2015,
+    "statut": "Incomplète",
+    "connexion": "Connect",
+    "proprietaire": "C3"
+  },
+  {
+    "id_getaround": "1935546",
+    "immatriculation": "FC195PA",
+    "modele": "Renault Mégane IV",
+    "annee": 2018,
+    "statut": "Incomplète",
+    "connexion": "Connect",
+    "proprietaire": "C3"
+  },
+  {
+    "id_getaround": "1935557",
+    "immatriculation": "DQ348JL",
+    "modele": "Peugeot 208",
+    "annee": 2015,
+    "statut": "Incomplète",
+    "connexion": "Connect",
+    "proprietaire": "C3"
+  },
+  {
+    "id_getaround": "1878543",
+    "immatriculation": "FC665WH",
+    "modele": "Renault Clio Société",
+    "annee": 2018,
+    "statut": "Bloquée",
+    "connexion": "Connect",
+    "proprietaire": "C2"
+  },
+  {
+    "id_getaround": "1881118",
+    "immatriculation": "FJ400WH",
+    "modele": "Peugeot 208",
+    "annee": 2019,
+    "statut": "Active",
+    "connexion": "Connect",
+    "proprietaire": "C2"
+  },
+  {
+    "id_getaround": "1881415",
+    "immatriculation": "EK012DW",
+    "modele": "Renault Twingo",
+    "annee": 2017,
+    "statut": "Active",
+    "connexion": "Connect",
+    "proprietaire": "C2"
+  },
+  {
+    "id_getaround": "1881481",
+    "immatriculation": "EH976BN",
+    "modele": "Citroën C1",
+    "annee": 2016,
+    "statut": "Active",
+    "connexion": "Connect",
+    "proprietaire": "C2"
+  },
+  {
+    "id_getaround": "1881606",
+    "immatriculation": "FR187TS",
+    "modele": "Volkswagen Up!",
+    "annee": 2020,
+    "statut": "Bloquée",
+    "connexion": "Connect",
+    "proprietaire": "C2"
+  },
+  {
+    "id_getaround": "1881624",
+    "immatriculation": "DV322GT",
+    "modele": "Renault Twingo III",
+    "annee": 2015,
+    "statut": "Active",
+    "connexion": "Connect",
+    "proprietaire": "C2"
+  },
+  {
+    "id_getaround": "1881636",
+    "immatriculation": "FW551HD",
+    "modele": "Peugeot 108",
+    "annee": 2019,
+    "statut": "Active",
+    "connexion": "Connect",
+    "proprietaire": "C2"
+  },
+  {
+    "id_getaround": "1881645",
+    "immatriculation": "DQ253YB",
+    "modele": "Renault Clio",
+    "annee": 2015,
+    "statut": "Active",
+    "connexion": "Connect",
+    "proprietaire": "C2"
+  },
+  {
+    "id_getaround": "1881691",
+    "immatriculation": "GF921SK",
+    "modele": "Opel Corsa",
+    "annee": 2017,
+    "statut": "Active",
+    "connexion": "Connect",
+    "proprietaire": "C2"
+  },
+  {
+    "id_getaround": "1894418",
+    "immatriculation": "FX634RS",
+    "modele": "Renault Twingo",
+    "annee": 2012,
+    "statut": "Active",
+    "connexion": "Échange de clés",
+    "proprietaire": "C2"
+  },
+  {
+    "id_getaround": "716035",
+    "immatriculation": "ED964CK",
+    "modele": "Citroën C3",
+    "annee": 2016,
+    "statut": "Active",
+    "connexion": "Échange de clés",
+    "proprietaire": "C1"
+  },
+  {
+    "id_getaround": "770586",
+    "immatriculation": "FT350HL",
+    "modele": "Fiat 500",
+    "annee": 2016,
+    "statut": "En pause",
+    "connexion": "Échange de clés",
+    "proprietaire": "C1"
+  },
+  {
+    "id_getaround": "996091",
+    "immatriculation": "FH763KA",
+    "modele": "Renault Twingo",
+    "annee": 2019,
+    "statut": "En pause",
+    "connexion": "Connect",
+    "proprietaire": "C1"
+  },
+  {
+    "id_getaround": "1078506",
+    "immatriculation": "BT463XA",
+    "modele": "Renault Clio",
+    "annee": 2011,
+    "statut": "Active",
+    "connexion": "Échange de clés",
+    "proprietaire": "C1"
+  },
+  {
+    "id_getaround": "1267184",
+    "immatriculation": "BR504ZJ",
+    "modele": "Renault Clio",
+    "annee": 2011,
+    "statut": "Bloquée",
+    "connexion": "Échange de clés",
+    "proprietaire": "C1"
+  }
+]

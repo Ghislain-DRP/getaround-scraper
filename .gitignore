@@ -1,0 +1,4 @@
+getaround_results/
+__pycache__/
+*.pyc
+*.bak

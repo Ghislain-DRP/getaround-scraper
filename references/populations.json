@@ -1,0 +1,176 @@
+{
+  "_meta": {
+    "source": "INSEE — Populations de référence en vigueur au 1er janvier 2026, date de référence statistique : 1er janvier 2023",
+    "url": "https://www.insee.fr/fr/statistiques/fichier/8680694/dep92.pdf",
+    "decret": "Décret n° 2025-1362 du 26 décembre 2025",
+    "date_collecte": "2026-07-26",
+    "champ": "Population municipale (colonne f du tableau 3)",
+    "perimetre": "36 communes des Hauts-de-Seine (92) couvertes par le scraping Getaround",
+    "nb_communes": 56,
+    "note": "36 communes 92 + 20 arrondissements Paris. Source : INSEE RP 2020 (publiés 2023)."
+  },
+  "antony": {
+    "label": "Antony",
+    "population": 65037
+  },
+  "asnieres-sur-seine": {
+    "label": "Asnières-sur-Seine",
+    "population": 94562
+  },
+  "bagneux": {
+    "label": "Bagneux",
+    "population": 44744
+  },
+  "bois-colombes": {
+    "label": "Bois-Colombes",
+    "population": 31014
+  },
+  "boulogne-billancourt": {
+    "label": "Boulogne-Billancourt",
+    "population": 119019
+  },
+  "bourg-la-reine": {
+    "label": "Bourg-la-Reine",
+    "population": 21018
+  },
+  "chatenay-malabry": {
+    "label": "Châtenay-Malabry",
+    "population": 35825
+  },
+  "chatillon": {
+    "label": "Châtillon",
+    "population": 36705
+  },
+  "chaville": {
+    "label": "Chaville",
+    "population": 20594
+  },
+  "clamart": {
+    "label": "Clamart",
+    "population": 58576
+  },
+  "clichy": {
+    "label": "Clichy",
+    "population": 64410
+  },
+  "colombes": {
+    "label": "Colombes",
+    "population": 91053
+  },
+  "courbevoie": {
+    "label": "Courbevoie",
+    "population": 82902
+  },
+  "fontenay-aux-roses": {
+    "label": "Fontenay-aux-Roses",
+    "population": 24070
+  },
+  "garches": {
+    "label": "Garches",
+    "population": 17743
+  },
+  "la-garenne-colombes": {
+    "label": "La Garenne-Colombes",
+    "population": 30197
+  },
+  "gennevilliers": {
+    "label": "Gennevilliers",
+    "population": 46579
+  },
+  "issy-les-moulineaux": {
+    "label": "Issy-les-Moulineaux",
+    "population": 67669
+  },
+  "levallois-perret": {
+    "label": "Levallois-Perret",
+    "population": 68092
+  },
+  "malakoff": {
+    "label": "Malakoff",
+    "population": 30557
+  },
+  "marnes-la-coquette": {
+    "label": "Marnes-la-Coquette",
+    "population": 1752
+  },
+  "meudon": {
+    "label": "Meudon",
+    "population": 46324
+  },
+  "montrouge": {
+    "label": "Montrouge",
+    "population": 50979
+  },
+  "nanterre": {
+    "label": "Nanterre",
+    "population": 97783
+  },
+  "neuilly-sur-seine": {
+    "label": "Neuilly-sur-Seine",
+    "population": 59538
+  },
+  "le-plessis-robinson": {
+    "label": "Le Plessis-Robinson",
+    "population": 28848
+  },
+  "puteaux": {
+    "label": "Puteaux",
+    "population": 44002
+  },
+  "rueil-malmaison": {
+    "label": "Rueil-Malmaison",
+    "population": 82874
+  },
+  "saint-cloud": {
+    "label": "Saint-Cloud",
+    "population": 29855
+  },
+  "sceaux": {
+    "label": "Sceaux",
+    "population": 20884
+  },
+  "sevres": {
+    "label": "Sèvres",
+    "population": 22303
+  },
+  "suresnes": {
+    "label": "Suresnes",
+    "population": 48956
+  },
+  "vanves": {
+    "label": "Vanves",
+    "population": 28622
+  },
+  "vaucresson": {
+    "label": "Vaucresson",
+    "population": 8432
+  },
+  "ville-d-avray": {
+    "label": "Ville-d'Avray",
+    "population": 11089
+  },
+  "villeneuve-la-garenne": {
+    "label": "Villeneuve-la-Garenne",
+    "population": 26021
+  },
+  "Paris 1er": 17395,
+  "Paris 2e": 21907,
+  "Paris 3e": 35991,
+  "Paris 4e": 28769,
+  "Paris 5e": 60179,
+  "Paris 6e": 42271,
+  "Paris 7e": 57191,
+  "Paris 8e": 38749,
+  "Paris 9e": 61468,
+  "Paris 10e": 93373,
+  "Paris 11e": 153813,
+  "Paris 12e": 144458,
+  "Paris 13e": 183483,
+  "Paris 14e": 137015,
+  "Paris 15e": 237015,
+  "Paris 16e": 167955,
+  "Paris 17e": 167288,
+  "Paris 18e": 196904,
+  "Paris 19e": 187015,
+  "Paris 20e": 196904
+}

@@ -272,7 +272,10 @@ def main():
         if candidates:
             csv_path = str(candidates[0])
 
-    ref_path = args.ref or csv_path  # Utiliser le CSV A2 comme référence si non fourni
+    # La référence T05 est le snapshot figé du 28/07 (871 ann., v3.2-pagination-gps)
+    # Elle ne doit JAMAIS être le dernier CSV A2 — sinon T05 ne teste rien.
+    default_ref = str(ROOT / "references" / "snapshot_ref_T05.csv")
+    ref_path = args.ref or default_ref
 
     print(f"Recette v3.2 — {ROOT}")
     print(f"CSV A2    : {csv_path or 'non fourni'}")

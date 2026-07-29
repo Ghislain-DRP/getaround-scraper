@@ -539,12 +539,21 @@ async def scrape_commune(
             note, nb_avis = extract_note_avis(full_text)
 
             modele = ""
+            _SEO_BADGES = {
+                'GETAROUND CONNECT', 'SUR RENDEZ-VOUS', 'UTILITAIRE', 'BERLINE',
+                'BREAK', 'COMPACTE', 'CITADINE', 'MONOSPACE', 'SUV', 'CABRIOLET',
+                'MICRO-CITADINE', 'AUTOMATIQUE', 'ELECTRIQUE',
+                'PÉPITE DES LOCATAIRES', 'PÉPITE',
+            }
             head = full_text.split("À partir de")[0].strip()
             for line in head.splitlines():
                 line = line.strip()
-                if line and not re.match(r"^\d", line) and len(line) > 2:
-                    modele = line
-                    break
+                if not line or line.upper() in _SEO_BADGES:
+                    continue
+                if re.match(r"^\d", line) or len(line) <= 2:
+                    continue
+                modele = line
+                break
 
             commune_slug = card.get("commune_annonce_slug", "")
             commune_annonce = commune_slug.replace("-", " ").title() if commune_slug else ""

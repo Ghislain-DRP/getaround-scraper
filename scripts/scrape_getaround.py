@@ -557,7 +557,7 @@ async def scrape_commune(
                 "fenetre_fin":           fenetre_fin,
                 "annonce_id":            annonce_id,
                 "url":                   f"https://fr.getaround.com{href}" if href.startswith("/") else href,
-                "modele":                full_text,
+                "modele":                modele,
                 "annee":                 "",
                 "type_connexion":        card.get("type_connexion", ""),
                 "segment":               infer_segment(modele),

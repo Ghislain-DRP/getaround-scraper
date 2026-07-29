@@ -1,0 +1,51 @@
+{
+  "snapshot_id": "20260729T190442",
+  "pipeline": "A2",
+  "version_collecte": "v3.3-search-gps",
+  "fenetre_debut": "2026-07-30T09:00",
+  "fenetre_fin": "2026-07-30T20:00",
+  "nb_communes_interrogees": 36,
+  "nb_communes_ok": 3,
+  "nb_communes_ko": 0,
+  "communes_ok": [
+    "Puteaux",
+    "Asnières-sur-Seine",
+    "Paris 17e"
+  ],
+  "communes_ko": {},
+  "nb_annonces_brutes": 1824,
+  "nb_annonce_ids_distincts": 1072,
+  "nb_prix_jour_manquants": 0,
+  "nb_annonces_hors_92": 927,
+  "taux_notes_pct": 81.2,
+  "variation_vs_precedent_pct": null,
+  "alerte_communes": false,
+  "alerte_volume": false,
+  "nb_segment_non_classe": 3,
+  "pct_segment_non_classe": 0.3,
+  "nb_commune_annonce_manquante": 0,
+  "pct_commune_annonce_manquante": 0.0,
+  "alerte_segmentation": false,
+  "alerte_geo": false,
+  "couverture_par_point": {
+    "Puteaux": {
+      "nb_captes": 521,
+      "nb_total": 521,
+      "taux_pct": 100.0
+    },
+    "Asnières-sur-Seine": {
+      "nb_captes": 1000,
+      "nb_total": 1001,
+      "taux_pct": 99.9
+    },
+    "Paris 17e": {
+      "nb_captes": 303,
+      "nb_total": 839,
+      "taux_pct": 36.1
+    }
+  },
+  "alerte_couverture": true,
+  "alertes": [
+    "ALERTE COUVERTURE : points GPS sous 95% : ['Paris 17e: 36.1% (303/839)']. Cause probable : rate-limit 429 en cours de pagination."
+  ]
+}

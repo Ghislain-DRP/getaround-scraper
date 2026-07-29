@@ -1000,7 +1000,7 @@ async def run_pipeline(pipeline: str, output_dir: Path, vehicles_file: Path):
         try:
             synthese = generate_synthesis(
                 dedup, prev_annonces, owner_vehicles,
-                pipeline=pipeline, scrape_time=snapshot_id, qc=qc
+                pipeline=pipeline, scrape_time=snapshot_id
             )
         except Exception as e:
             synthese = f"# Erreur synthèse\n{e}"

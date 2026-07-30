@@ -43,16 +43,19 @@ SEGMENT_RULES = [
                        r"transit(?! connect)|boxer|master|movano|nemo|berlingo(?! multispace)|"
                        r"partner(?! tepee)|kangoo(?! combi)|nv200|expert(?! tepee)(?! double)|"
                        r"proace fourgon|trafic(?! passenger)|vivaro(?! combi)|sprinter(?! combi)|"
-                       r"citan fourgon|combo cargo|rifter cargo"),
+                       r"citan fourgon|combo cargo|rifter cargo|"
+                       r"\bnv400\b|man tge|proace city electric|evito|\bexpress\b"),
     ("MONOSPACE",      r"5008|c4 picasso|c3 picasso|grand scenic|\bscenic\b|espace|jogger|lodgy|"
                        r"c max|c-max|traveller|vito tourer|trafic passenger|expert tepee|"
                        r"expert double|proace combi|jumpy multispace|vivaro combi|sprinter combi|"
                        r"classe b\b|modus|kangoo combi|berlingo multispace|rifter(?! cargo)|"
                        r"proace city verso|citan combi|combo life|"
-                       r"voyager|\bverso\b|touran|\bix20\b"),
+                       r"voyager|\bverso\b|touran|\bix20\b|"
+                       r"classe v\b|symbioz"),
     ("BREAK",          r"\bsw\b|estate|touring sports|\bbreak\b|rxh|cross tourer|"
                        r"\bvariant\b|avant\b|touring\b|sportbrake|alltrack|cross country|"
-                       r"clubman|logan mcv|b-max|b max"),
+                       r"clubman|logan mcv|b-max|b max|"
+                       r"\bv40\b"),
     ("SUV_FAMILIAL",   r"3008|tiguan|kodiaq|\bx5\b|cr v|cr-v|model y|austral|kadjar|"
                        r"countryman|\bx3\b|\bq5\b|sorento|santa fe|tucson|grandland|"
                        r"\bq7\b|\bq8\b|\bx6\b|\bx7\b|discovery sport|range rover evoque|"
@@ -61,7 +64,8 @@ SEGMENT_RULES = [
                        r"\bx1\b|\bix1\b|\bx2\b|renegade|lynk|\bq4\b|hs phev|xc40|"
                        r"rav 4|rav4|\bex30\b|\bds 7\b|\bds7\b|"
                        r"\bsuv\b.*familial|cx 5|cx-5|cx 60|cx-60|eclipse cross|outlander|"
-                       r"\bcr-v\b|\bpassat\b.*alltrack"),
+                       r"\bcr-v\b|\bpassat\b.*alltrack|"
+                       r"\bix35\b|\bxc60\b"),
     ("SUV_COMPACT",    r"2008|captur|mokka|t cross|t-cross|\bpuma\b|kamiq|c hr|c-hr|kona|niro|"
                        r"formentor|classe gla|\bgla\b|ds3 crossback|ds 3 crossback|yaris cross|"
                        r"zs ev|hr v|hr-v|\bzs\b|juke|arona|\bq2\b|\bq3\b|"
@@ -71,7 +75,8 @@ SEGMENT_RULES = [
                        r"\bpulsar\b|\bterrano\b|\bqashqai\b|\bx trail\b|x-trail|"
                        r"\bc5 aircross\b|\bpace\b|\bf-pace\b|\be-pace\b|"
                        r"\bexplorer\b|\bpuma\b|\bkuga\b|\bfocus\b.*active|"
-                       r"lexus ux|lexus ct"),
+                       r"lexus ux|lexus ct|"
+                       r"\bkia soul\b|\bkia venga\b|\bmg ehs\b"),
     ("BERLINE",        r"passat|\b508\b|classe c|classe e|classe s|laguna|\bds5\b|\bds4\b|"
                        r"model 3|serie 3|serie 5|\ba4\b|\ba6\b|insignia|mondeo|superb|talisman|"
                        r"\ba7\b|\ba8\b|serie 7|\bls\b|\bes\b.*berline|"
@@ -80,7 +85,8 @@ SEGMENT_RULES = [
                        r"\blaguna\b|\bvel satis\b|\blatitude\b|\bfluence\b|"
                        r"\bbravo\b|\blinea\b|\bstilo\b|\balbea\b|"
                        r"\baccord\b|\blegend\b|\binsight\b|"
-                       r"a5 sportback|\bcla\b|cruze|giulietta|byd seal"),
+                       r"a5 sportback|\bcla\b|cruze|giulietta|byd seal|"
+                       r"\bds 4 e-tense\b|\bds4 e-tense\b"),
     ("COMPACTE",       r"\bgolf\b|\b308\b|megane|\bc4\b|c4 cactus|\ba3\b|serie 1|astra|auris|"
                        r"corolla|focus(?! active)|classe a|prius|ioniq|leon|octavia|i30|ceed|civic|"
                        r"punto|\btipo\b|\bserie 2\b|serie 2 gran coupe|"
@@ -100,7 +106,8 @@ SEGMENT_RULES = [
                        r"\btwingo\b(?! gt)|\bwind\b|\bclio\b|\bkangoo\b.*city|"
                        r"\bleaf\b|\be 208\b|\be-208\b|\bid.3\b|\bspring\b.*electr|"
                        r"\bka\b|\badam\b|\bagila\b|\b500e\b|\b600e\b|aveo|space star|"
-                       r"\blogan\b(?! mcv)"),
+                       r"\blogan\b(?! mcv)|"
+                       r"\bmito\b|\bkarl\b|\bmeriva\b|c-elysee|c elysee|\bmini one\b"),
     ("MICRO_CITADINE", r"\bc1\b|\b107\b|\b108\b|aygo|twingo(?! gt)|\bup\b|e up|fortwo|forfour|"
                        r"pixo|ignis|panda|smart|\bi1\b"),
 ]#!/usr/bin/env python3
@@ -148,16 +155,19 @@ SEGMENT_RULES = [
                        r"transit(?! connect)|boxer|master|movano|nemo|berlingo(?! multispace)|"
                        r"partner(?! tepee)|kangoo(?! combi)|nv200|expert(?! tepee)(?! double)|"
                        r"proace fourgon|trafic(?! passenger)|vivaro(?! combi)|sprinter(?! combi)|"
-                       r"citan fourgon|combo cargo|rifter cargo"),
+                       r"citan fourgon|combo cargo|rifter cargo|"
+                       r"\bnv400\b|man tge|proace city electric|evito|\bexpress\b"),
     ("MONOSPACE",      r"5008|c4 picasso|c3 picasso|grand scenic|\bscenic\b|espace|jogger|lodgy|"
                        r"c max|c-max|traveller|vito tourer|trafic passenger|expert tepee|"
                        r"expert double|proace combi|jumpy multispace|vivaro combi|sprinter combi|"
                        r"classe b\b|modus|kangoo combi|berlingo multispace|rifter(?! cargo)|"
                        r"proace city verso|citan combi|combo life|"
-                       r"voyager|\bverso\b|touran|\bix20\b"),
+                       r"voyager|\bverso\b|touran|\bix20\b|"
+                       r"classe v\b|symbioz"),
     ("BREAK",          r"\bsw\b|estate|touring sports|\bbreak\b|rxh|cross tourer|"
                        r"\bvariant\b|avant\b|touring\b|sportbrake|alltrack|cross country|"
-                       r"clubman|logan mcv|b-max|b max"),
+                       r"clubman|logan mcv|b-max|b max|"
+                       r"\bv40\b"),
     ("SUV_FAMILIAL",   r"3008|tiguan|kodiaq|\bx5\b|cr v|cr-v|model y|austral|kadjar|"
                        r"countryman|\bx3\b|\bq5\b|sorento|santa fe|tucson|grandland|"
                        r"\bq7\b|\bq8\b|\bx6\b|\bx7\b|discovery sport|range rover evoque|"
@@ -166,7 +176,8 @@ SEGMENT_RULES = [
                        r"\bx1\b|\bix1\b|\bx2\b|renegade|lynk|\bq4\b|hs phev|xc40|"
                        r"rav 4|rav4|\bex30\b|\bds 7\b|\bds7\b|"
                        r"\bsuv\b.*familial|cx 5|cx-5|cx 60|cx-60|eclipse cross|outlander|"
-                       r"\bcr-v\b|\bpassat\b.*alltrack"),
+                       r"\bcr-v\b|\bpassat\b.*alltrack|"
+                       r"\bix35\b|\bxc60\b"),
     ("SUV_COMPACT",    r"2008|captur|mokka|t cross|t-cross|\bpuma\b|kamiq|c hr|c-hr|kona|niro|"
                        r"formentor|classe gla|\bgla\b|ds3 crossback|ds 3 crossback|yaris cross|"
                        r"zs ev|hr v|hr-v|\bzs\b|juke|arona|\bq2\b|\bq3\b|"
@@ -176,7 +187,8 @@ SEGMENT_RULES = [
                        r"\bpulsar\b|\bterrano\b|\bqashqai\b|\bx trail\b|x-trail|"
                        r"\bc5 aircross\b|\bpace\b|\bf-pace\b|\be-pace\b|"
                        r"\bexplorer\b|\bpuma\b|\bkuga\b|\bfocus\b.*active|"
-                       r"lexus ux|lexus ct"),
+                       r"lexus ux|lexus ct|"
+                       r"\bkia soul\b|\bkia venga\b|\bmg ehs\b"),
     ("BERLINE",        r"passat|\b508\b|classe c|classe e|classe s|laguna|\bds5\b|\bds4\b|"
                        r"model 3|serie 3|serie 5|\ba4\b|\ba6\b|insignia|mondeo|superb|talisman|"
                        r"\ba7\b|\ba8\b|serie 7|\bls\b|\bes\b.*berline|"
@@ -185,7 +197,8 @@ SEGMENT_RULES = [
                        r"\blaguna\b|\bvel satis\b|\blatitude\b|\bfluence\b|"
                        r"\bbravo\b|\blinea\b|\bstilo\b|\balbea\b|"
                        r"\baccord\b|\blegend\b|\binsight\b|"
-                       r"a5 sportback|\bcla\b|cruze|giulietta|byd seal"),
+                       r"a5 sportback|\bcla\b|cruze|giulietta|byd seal|"
+                       r"\bds 4 e-tense\b|\bds4 e-tense\b"),
     ("COMPACTE",       r"\bgolf\b|\b308\b|megane|\bc4\b|c4 cactus|\ba3\b|serie 1|astra|auris|"
                        r"corolla|focus(?! active)|classe a|prius|ioniq|leon|octavia|i30|ceed|civic|"
                        r"punto|\btipo\b|\bserie 2\b|serie 2 gran coupe|"
@@ -205,7 +218,8 @@ SEGMENT_RULES = [
                        r"\btwingo\b(?! gt)|\bwind\b|\bclio\b|\bkangoo\b.*city|"
                        r"\bleaf\b|\be 208\b|\be-208\b|\bid.3\b|\bspring\b.*electr|"
                        r"\bka\b|\badam\b|\bagila\b|\b500e\b|\b600e\b|aveo|space star|"
-                       r"\blogan\b(?! mcv)"),
+                       r"\blogan\b(?! mcv)|"
+                       r"\bmito\b|\bkarl\b|\bmeriva\b|c-elysee|c elysee|\bmini one\b"),
     ("MICRO_CITADINE", r"\bc1\b|\b107\b|\b108\b|aygo|twingo(?! gt)|\bup\b|e up|fortwo|forfour|"
                        r"pixo|ignis|panda|smart|\bi1\b"),
 ]

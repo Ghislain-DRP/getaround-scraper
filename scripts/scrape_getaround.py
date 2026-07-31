@@ -353,7 +353,7 @@ async def scrape_gps_point(
     )
 
     try:
-        await page.goto(url, wait_until="domcontentloaded", timeout=30000)
+        await page.goto(url, wait_until="commit", timeout=60000)
         await asyncio.sleep(MIN_DELAY)
 
         # Attendre le chargement initial des cartes (v3.3 : sélecteur data-car-page-url)
@@ -514,7 +514,7 @@ async def scrape_commune(
     )
 
     try:
-        await page.goto(url, wait_until="domcontentloaded", timeout=30000)
+        await page.goto(url, wait_until="commit", timeout=60000)
         await asyncio.sleep(MIN_DELAY)
 
         try:

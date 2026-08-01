@@ -1,5 +1,5 @@
 """
-Getaround Scraper v3.2 — Mission 1 : Collecte concurrentielle (public, sans authentification)
+Getaround Scraper v3.4 — Mission 1 : Collecte concurrentielle (public, sans authentification)
 ==============================================================================================
 
 Trois pipelines :
@@ -7,16 +7,16 @@ Trois pipelines :
   A2 — Détection de réservation      : 4x/jour à 08h30/13h/17h/21h, fenêtre J+1 09h00→20h00
   B  — Pricing week-end              : mer/jeu/ven à 10h00, fenêtre sam 08h00→dim 20h00
 
-Architecture v3.3 :
-  - Branche GPS (A2) : URL /search?latitude=...&longitude=... + pagination par clic
-    → MAX_CLICS=50, ~40 cartes/clic, couverture ≥ 95% par point
+Architecture v3.4 :
+  - Branche GPS (A2) : API search.json avec pagination ?page=N (requests, sans Playwright)
+    → Collecte exhaustive : toutes les pages jusqu'à next_page=null
+    → Champs extraits directement depuis le JSON (id, carTitleWithoutDetails, etc.)
+    → Plus robuste que le scraping HTML (pas de skeleton, pas de sélecteur fragile)
   - 3 points GPS fixes A2 : Puteaux, Asnières-sur-Seine, Paris 17e
-  - Branche SEO (A1/B) : URL par commune, scraping HTML classique
-  - Nouveaux champs : distance_recherche, nb_resultats_total, nb_clics_pagination
+  - Branche SEO (A1/B) : URL par commune, scraping HTML via Playwright (inchangé)
   - version_collecte tracée dans chaque ligne CSV et dans le QC JSON
   - v3.3 : migration URL /search (Getaround a supprimé /location-voiture/france?address=...)
-    Sélecteur : [data-car-page-url] au lieu de a[href*="/location-voiture/"]
-    Bouton pagination : 'Afficher plus de résultats' (classe search-results__load-more-button)
+  - v3.4 : migration API JSON (Getaround charge les cartes en React, sélecteurs HTML fragiles)
 
 Règles non négociables :
   - Ne jamais inventer une valeur (champ absent = vide, pas de valeur par défaut)
@@ -41,6 +41,7 @@ import time
 from datetime import datetime, timedelta, date
 from pathlib import Path
 from playwright.async_api import async_playwright
+import requests as _requests
 
 import sys
 sys.path.insert(0, str(Path(__file__).parent))
@@ -49,7 +50,7 @@ from analyse import generate_synthesis, load_json, infer_segment, infer_energie
 
 # ─── Version ─────────────────────────────────────────────────────────────────
 
-VERSION_COLLECTE = "v3.3-search-gps"
+VERSION_COLLECTE = "v3.4-search-json"
 
 
 # ─── 36 communes du département 92 ───────────────────────────────────────────
@@ -103,7 +104,8 @@ A2_GPS_POINTS = [
     ("Paris 17e",           48.8836, 2.3088),
 ]
 
-MAX_CLICS = 50  # Nombre maximum de clics "Afficher plus" par point GPS
+MAX_CLICS = 50  # Nombre maximum de clics "Afficher plus" par point GPS (branche SEO)
+MAX_PAGES_JSON = 100  # Nombre maximum de pages search.json par point GPS (40 résultats/page)
 
 DEFAULT_OUTPUT_DIR = Path("/home/ubuntu/getaround_results")
 DEFAULT_VEHICLES_FILE = Path(__file__).parent.parent / "references" / "mes_vehicules.json"
@@ -321,10 +323,118 @@ JS_NB_RESULTS = r"""
 """
 
 
-# ─── Scraping GPS (pipeline A2) ───────────────────────────────────────────────
+# ─── Scraping GPS via API JSON (pipeline A2) ─────────────────────────────────
 
-async def scrape_gps_point(
-    page,
+_JSON_HEADERS = {
+    "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
+                  "(KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+    "Accept": "application/json",
+    "Referer": "https://fr.getaround.com/search",
+}
+
+_MODEL_YEAR_RE_GPS = re.compile(r'^(.+?)\s*\((\d{4})\)\s*$')
+
+
+def _parse_car_json(
+    car: dict,
+    rang: int,
+    label: str,
+    fenetre_debut: str,
+    fenetre_fin: str,
+    pipeline: str,
+    snapshot_id: str,
+    nb_total: int,
+    page_num: int,
+) -> dict:
+    """
+    v3.4 : Convertit un objet voiture de search.json en ligne CSV standardisée.
+    Règle : champ absent = vide, jamais de valeur par défaut inventée.
+    """
+    car_id = str(car.get("id", ""))
+    friendly_path = car.get("friendlyCarPath", "") or ""
+    url = f"https://fr.getaround.com{friendly_path.split('?')[0]}" if friendly_path else ""
+
+    # Modèle et année depuis carTitleWithoutDetails (ex: "Renault Clio (2015)")
+    title = car.get("carTitleWithoutDetails", "") or ""
+    modele = ""
+    annee = ""
+    m = _MODEL_YEAR_RE_GPS.match(title)
+    if m:
+        modele = f"{m.group(1).strip()} ({m.group(2)})"
+        annee = m.group(2)
+    elif title:
+        modele = title
+
+    # Type connexion
+    type_connexion = car.get("pickupMethodLabel", "") or ""
+
+    # Prix : pour A2 (1 jour), humanPrice = prix du jour
+    # humanDailyPrice est prioritaire si disponible
+    prix_jour = ""
+    raw_price = car.get("humanDailyPrice") or car.get("humanPrice") or ""
+    if raw_price:
+        prix_jour = parse_price(raw_price) or ""
+
+    # Note et avis
+    rating = car.get("rating") or {}
+    note = rating.get("value", "") if rating.get("value") is not None else ""
+    nb_avis = rating.get("count", "") if rating.get("count") is not None else ""
+
+    # Commune annonce depuis friendlyCarPath (/location-voiture/{commune}/{modele}-{id})
+    commune_annonce = ""
+    cm = re.search(r'/location-voiture/([^/]+)/', friendly_path)
+    if cm:
+        commune_annonce = cm.group(1).replace("-", " ").title()
+
+    # Distance
+    distance_recherche = ""
+    dist_label = car.get("humanDistanceLabel", "") or ""
+    dm = _DIST_RE.search(dist_label)
+    if dm:
+        val = float(dm.group(1).replace(",", "."))
+        unit = dm.group(2).lower()
+        distance_recherche = int(val * 1000) if unit == "km" else int(val)
+
+    # Livraison
+    livraison_disponible = bool(car.get("deliveryType"))
+
+    # Réservation instantanée
+    reservation_instantanee = bool(car.get("instantBookable"))
+
+    return {
+        "snapshot_id":             snapshot_id,
+        "pipeline":                pipeline,
+        "version_collecte":        VERSION_COLLECTE,
+        "fenetre_debut":           fenetre_debut,
+        "fenetre_fin":             fenetre_fin,
+        "annonce_id":              car_id,
+        "url":                     url,
+        "modele":                  modele,
+        "annee":                   annee,
+        "type_connexion":          type_connexion,
+        "segment":                 infer_segment(modele),
+        "energie":                 infer_energie(modele, type_connexion),
+        "reservation_instantanee": reservation_instantanee,
+        "prix_jour":               prix_jour,
+        "prix_heure":              "",
+        "note":                    note,
+        "nb_avis":                 nb_avis,
+        "commune_recherche":       label,
+        "commune_annonce":         commune_annonce,
+        "communes_recherche":      label,
+        "nb_communes_matchees":    1,
+        "rang_resultat":           rang,
+        "livraison_disponible":    livraison_disponible,
+        "mon_vehicule":            False,
+        "compte_proprietaire":     "",
+        "distance_recherche":      distance_recherche,
+        "nb_resultats_total":      nb_total,
+        "nb_clics_pagination":     page_num,
+        "source_taxonomie":        "SEGMENT_RULES",
+    }
+
+
+def scrape_gps_point_json(
     label: str,
     lat: float,
     lng: float,
@@ -334,163 +444,93 @@ async def scrape_gps_point(
     snapshot_id: str,
 ) -> tuple[list[dict], str | None]:
     """
-    Scrape un point GPS par pagination complète (clic "Afficher plus").
+    v3.4 : Scrape un point GPS via l'API search.json avec pagination ?page=N.
     Retourne (liste_annonces, erreur_ou_None).
+    Utilise requests (synchrone) — pas de Playwright nécessaire pour A2.
     """
-    # v3.3 : nouvelle URL /search (Getaround a supprimé /location-voiture/france?address=...)
-    # Dates au format YYYY-MM-DD (extraire depuis fenetre_debut/fin au format YYYY-MM-DDTHH:MM)
     start_date = fenetre_debut[:10]
     end_date = fenetre_fin[:10]
     start_time = fenetre_debut[11:] if len(fenetre_debut) > 10 else "09:00"
     end_time = fenetre_fin[11:] if len(fenetre_fin) > 10 else "20:00"
-    url = (
-        f"https://fr.getaround.com/search"
+
+    base_params = (
         f"?latitude={lat}&longitude={lng}"
         f"&start_date={start_date}&start_time={start_time}"
         f"&end_date={end_date}&end_time={end_time}"
         f"&country_scope=FR&display_view=list"
         f"&pickup_method_explicit_choice=true"
     )
+    base_url = f"https://fr.getaround.com/search.json{base_params}"
 
     try:
-        await page.goto(url, wait_until="commit", timeout=60000)
-        await asyncio.sleep(MIN_DELAY)
+        annonces = []
+        seen_ids = set()
+        nb_total = 0
+        page_num = 1
+        rang = 0
 
-        # Attendre le chargement initial des cartes (v3.3 : sélecteur data-car-page-url)
-        try:
-            await page.wait_for_selector(
-                '[data-car-page-url]', timeout=15000
-            )
-        except Exception:
-            pass
+        while page_num <= MAX_PAGES_JSON:
+            url = f"{base_url}&page={page_num}"
+            resp = _requests.get(url, headers=_JSON_HEADERS, timeout=90)
 
-        # Lire le nombre total de résultats annoncé
-        nb_total = await page.evaluate(JS_NB_RESULTS)
-
-        # Pagination : cliquer "Afficher plus" jusqu'à épuisement ou MAX_CLICS
-        nb_clics = 0
-        for _ in range(MAX_CLICS):
-            has_btn = await page.evaluate(JS_HAS_BTN)
-            if not has_btn:
+            if resp.status_code != 200:
+                if page_num == 1:
+                    raise RuntimeError(
+                        f"search.json HTTP {resp.status_code} sur page 1 — "
+                        f"URL : {url[:120]}"
+                    )
                 break
-            # Cliquer le bouton
+
             try:
-                await page.evaluate(r"""
-                    () => {
-                        // v3.3 : clic sur le bouton search-results__load-more-button
-                        const btn = document.querySelector('button.search-results__load-more-button');
-                        if (btn && !btn.disabled) { btn.click(); return true; }
-                        // Fallback : chercher par texte
-                        const btns = document.querySelectorAll('button');
-                        for (const b of btns) {
-                            if (/afficher plus/i.test(b.innerText || '')) {
-                                b.click();
-                                return true;
-                            }
-                        }
-                        return false;
-                    }
-                """)
-                nb_clics += 1
-                await asyncio.sleep(MIN_DELAY)
-            except Exception:
+                data = resp.json()
+            except Exception as e:
+                if page_num == 1:
+                    raise RuntimeError(f"search.json JSON invalide page 1 : {e}")
                 break
 
-        # Extraire toutes les cartes visibles (v3.3 : JS_CARDS_SEARCH pour page /search)
-        raw_cards = await page.evaluate(JS_CARDS_SEARCH)
+            if page_num == 1:
+                nb_total = data.get("total_count") or 0
+
+            cars = data.get("cars") or []
+            if not cars:
+                break
+
+            for car in cars:
+                car_id = str(car.get("id", ""))
+                if not car_id or car_id in seen_ids:
+                    continue
+                seen_ids.add(car_id)
+                rang += 1
+                annonces.append(
+                    _parse_car_json(
+                        car, rang, label,
+                        fenetre_debut, fenetre_fin,
+                        pipeline, snapshot_id,
+                        nb_total, page_num,
+                    )
+                )
+
+            next_page = data.get("next_page")
+            if not next_page:
+                break
+
+            page_num += 1
+            time.sleep(MIN_DELAY)
 
         # ── Garde-fou run partiel ──────────────────────────────────────────────
-        # Si le compteur Getaround annonce > 100 résultats mais qu'on n'a capté
-        # que < 100 cartes, la page a probablement redirigé vers l'accueil
-        # (throttling ou détection de bot). On refuse d'écrire un CSV vide.
         MIN_ANNONCES_ATTENDUES = 100
-        if nb_total and int(str(nb_total)) >= MIN_ANNONCES_ATTENDUES and len(raw_cards) < MIN_ANNONCES_ATTENDUES:
+        if nb_total >= MIN_ANNONCES_ATTENDUES and len(annonces) < MIN_ANNONCES_ATTENDUES:
             raise RuntimeError(
-                f"RUN_PARTIEL : {len(raw_cards)} cartes captées alors que "
-                f"le compteur annonce {nb_total} résultats. "
-                f"Probable redirection vers l'accueil (throttling / bot-detection). "
-                f"Aucun CSV écrit."
+                f"RUN_PARTIEL : {len(annonces)} annonces captées alors que "
+                f"search.json annonce {nb_total} résultats. "
+                f"Probable blocage ou réponse vide. Aucun CSV écrit."
             )
-
-        annonces = []
-        rang = 0
-        for card in raw_cards:
-            rang += 1
-            href = card.get("href", "")
-            annonce_id = card.get("id", "")
-            if not annonce_id:
-                continue
-
-            full_text = card.get("fullText", "")
-
-            # Note et avis
-            note, nb_avis = extract_note_avis(full_text)
-
-            # Modèle : regex "Marque Modèle (Année)" sur page /search
-            # Fallback : première ligne non-badge, non-chiffre
-            _MODEL_YEAR_RE = re.compile(r'^(.+?)\s*\((\d{4})\)\s*$', re.MULTILINE)
-            _BADGES = {'GETAROUND CONNECT', 'SUR RENDEZ-VOUS', 'Pépite des locataires'}
-            modele = ""
-            annee = ""
-            m_my = _MODEL_YEAR_RE.search(full_text)
-            if m_my:
-                modele = f"{m_my.group(1).strip()} ({m_my.group(2)})"
-                annee = m_my.group(2)
-            else:
-                for line in full_text.splitlines():
-                    line = line.strip()
-                    if line and line not in _BADGES and not re.match(r'^\d', line) and len(line) > 3:
-                        modele = line
-                        break
-
-            # Commune annonce depuis l'URL
-            commune_slug = card.get("commune_annonce_slug", "")
-            commune_annonce = commune_slug.replace("-", " ").title() if commune_slug else ""
-
-            # Distance depuis le point de recherche
-            distance_recherche = ""
-            dm = _DIST_RE.search(full_text)
-            if dm:
-                val = float(dm.group(1).replace(",", "."))
-                unit = dm.group(2).lower()
-                distance_recherche = int(val * 1000) if unit == "km" else int(val)
-
-            annonces.append({
-                "snapshot_id":           snapshot_id,
-                "pipeline":              pipeline,
-                "version_collecte":      VERSION_COLLECTE,
-                "fenetre_debut":         fenetre_debut,
-                "fenetre_fin":           fenetre_fin,
-                "annonce_id":            annonce_id,
-                "url":                   f"https://fr.getaround.com{href}" if href.startswith("/") else href,
-                "modele":                modele,
-                "annee":                 annee,
-                "type_connexion":        card.get("type_connexion", ""),
-                "segment":               infer_segment(modele),
-                "energie":               infer_energie(modele, card.get("type_connexion", "")),
-                "reservation_instantanee": card.get("reservation_instantanee", False),
-                "prix_jour":             parse_price(card.get("prix_jour", "")) or "",
-                "prix_heure":            parse_price(card.get("prix_heure", "")) or "",
-                "note":                  note if note is not None else "",
-                "nb_avis":               nb_avis if nb_avis is not None else "",
-                "commune_recherche":     label,
-                "commune_annonce":       commune_annonce,
-                "communes_recherche":    label,
-                "nb_communes_matchees":  1,
-                "rang_resultat":         rang,
-                "livraison_disponible":  card.get("livraison_disponible", False),
-                "mon_vehicule":          False,
-                "compte_proprietaire":   "",
-                "distance_recherche":    distance_recherche,
-                "nb_resultats_total":    nb_total if nb_total is not None else "",
-                "nb_clics_pagination":   nb_clics,
-                "source_taxonomie":      "SEGMENT_RULES",
-            })
 
         return annonces, None
 
     except Exception as e:
         return [], str(e)
+
 
 
 # ─── Scraping SEO (pipeline A1/B) ─────────────────────────────────────────────
@@ -876,49 +916,49 @@ async def run_pipeline(pipeline: str, output_dir: Path, vehicles_file: Path):
     communes_ko = {}
     couverture_par_point = {}
 
-    async with async_playwright() as pw:
-        browser = await pw.chromium.launch(headless=True)
-        context = await browser.new_context(
-            user_agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
-                       "(KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
-        )
-        page = await context.new_page()
+    if pipeline == "A2":
+        # ── Branche GPS (v3.4) : API search.json, sans Playwright ─────────────────
+        for i, (label, lat, lng) in enumerate(A2_GPS_POINTS):
+            print(f"[GPS {i+1}/{len(A2_GPS_POINTS)}] {label} ({lat}, {lng})...", end=" ", flush=True)
 
-        if pipeline == "A2":
-            # ── Branche GPS : 3 points fixes ──────────────────────────────────
-            for i, (label, lat, lng) in enumerate(A2_GPS_POINTS):
-                print(f"[GPS {i+1}/{len(A2_GPS_POINTS)}] {label} ({lat}, {lng})...", end=" ", flush=True)
+            annonces, erreur = scrape_gps_point_json(
+                label, lat, lng, fenetre_debut, fenetre_fin, pipeline, snapshot_id
+            )
 
-                annonces, erreur = await scrape_gps_point(
-                    page, label, lat, lng, fenetre_debut, fenetre_fin, pipeline, snapshot_id
-                )
-
-                if erreur:
-                    print(f"ERREUR : {erreur}")
-                    communes_ko[label] = erreur
-                    couverture_par_point[label] = {"nb_captes": 0, "nb_total": None, "taux_pct": None}
+            if erreur:
+                print(f"ERREUR : {erreur}")
+                communes_ko[label] = erreur
+                couverture_par_point[label] = {"nb_captes": 0, "nb_total": None, "taux_pct": None}
+            else:
+                nb_total = annonces[0].get("nb_resultats_total", "") if annonces else ""
+                nb_pages = annonces[-1].get("nb_clics_pagination", 0) if annonces else 0
+                print(f"{len(annonces)} annonces | {nb_pages} pages | total={nb_total}")
+                communes_ok.append(label)
+                all_annonces.extend(annonces)
+                # Couverture par point
+                if nb_total and int(str(nb_total)) > 0:
+                    taux = round(len(annonces) / int(str(nb_total)) * 100, 1)
                 else:
-                    nb_total = annonces[0].get("nb_resultats_total", "") if annonces else ""
-                    nb_clics = annonces[0].get("nb_clics_pagination", 0) if annonces else 0
-                    print(f"{len(annonces)} annonces | {nb_clics} clics | total={nb_total}")
-                    communes_ok.append(label)
-                    all_annonces.extend(annonces)
-                    # Couverture par point
-                    if nb_total and int(str(nb_total)) > 0:
-                        taux = round(len(annonces) / int(str(nb_total)) * 100, 1)
-                    else:
-                        taux = 100.0
-                    couverture_par_point[label] = {
-                        "nb_captes": len(annonces),
-                        "nb_total": nb_total if nb_total else len(annonces),
-                        "taux_pct": taux,
-                    }
+                    taux = 100.0
+                couverture_par_point[label] = {
+                    "nb_captes": len(annonces),
+                    "nb_total": nb_total if nb_total else len(annonces),
+                    "taux_pct": taux,
+                }
 
-                if i < len(A2_GPS_POINTS) - 1:
-                    await asyncio.sleep(MIN_DELAY)
+            if i < len(A2_GPS_POINTS) - 1:
+                time.sleep(MIN_DELAY)
 
-        else:
-            # ── Branche SEO : 36 communes ──────────────────────────────────────
+    else:
+        # ── Branche SEO : 36 communes via Playwright ───────────────────────────────
+        async with async_playwright() as pw:
+            browser = await pw.chromium.launch(headless=True)
+            context = await browser.new_context(
+                user_agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
+                           "(KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
+            )
+            page = await context.new_page()
+
             env_cities = os.environ.get("GETAROUND_CITIES", "")
             if env_cities:
                 slugs = [s.strip() for s in env_cities.split(",")]
@@ -944,7 +984,7 @@ async def run_pipeline(pipeline: str, output_dir: Path, vehicles_file: Path):
                 if i < len(communes) - 1:
                     await asyncio.sleep(MIN_DELAY)
 
-        await browser.close()
+            await browser.close()
 
     # Dédoublonnage
     dedup = deduplicate(all_annonces)

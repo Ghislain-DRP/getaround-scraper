@@ -285,6 +285,8 @@ GETAROUND_CITIES=puteaux,courbevoie python3 skills/getaround-scraper/scripts/scr
 | 28/07/2026 | Nouvelle URL GPS : `/search?latitude={lat}&longitude={lng}&start_date=...&end_date=...&country_scope=FR&display_view=list` | Migration v3.3 | **Corrigé** |
 | 28/07/2026 | Sélecteur cartes : `a[href*="/location-voiture/"]` → `[data-car-page-url]` sur page `/search` | Migration v3.3 | **Corrigé** |
 | 28/07/2026 | Bouton pagination : texte "Afficher plus" → classe `search-results__load-more-button` | Migration v3.3 | **Corrigé** |
+| 01/08/2026 | Cartes `/search` chargées en React (skeleton) — `[data-car-page-url]` absent au chargement | Pipeline A2 retourne 0 annonces (skeleton non résolu) | **Cassé** |
+| 01/08/2026 | Migration vers API `search.json` directe avec pagination `?page=N` (requests, sans Playwright) | Pipeline A2 : 996 annonces uniques, 3/3 points GPS OK, couverture 100% | **Corrigé v3.4** |
 
 ### Segmentation : Option A provisoire (SEGMENT\_RULES)
 

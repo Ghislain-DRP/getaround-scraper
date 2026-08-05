@@ -1,0 +1,49 @@
+{
+  "snapshot_id": "20260805T190259",
+  "pipeline": "A2",
+  "version_collecte": "v3.4-search-json",
+  "fenetre_debut": "2026-08-06T09:00",
+  "fenetre_fin": "2026-08-06T20:00",
+  "nb_communes_interrogees": 36,
+  "nb_communes_ok": 3,
+  "nb_communes_ko": 0,
+  "communes_ok": [
+    "Puteaux",
+    "Asnières-sur-Seine",
+    "Paris 17e"
+  ],
+  "communes_ko": {},
+  "nb_annonces_brutes": 2296,
+  "nb_annonce_ids_distincts": 1134,
+  "nb_prix_jour_manquants": 0,
+  "nb_annonces_hors_92": 968,
+  "taux_notes_pct": 65.5,
+  "variation_vs_precedent_pct": null,
+  "alerte_communes": false,
+  "alerte_volume": false,
+  "nb_segment_non_classe": 8,
+  "pct_segment_non_classe": 0.7,
+  "nb_commune_annonce_manquante": 0,
+  "pct_commune_annonce_manquante": 0.0,
+  "alerte_segmentation": false,
+  "alerte_geo": false,
+  "couverture_par_point": {
+    "Puteaux": {
+      "nb_captes": 424,
+      "nb_total": 424,
+      "taux_pct": 100.0
+    },
+    "Asnières-sur-Seine": {
+      "nb_captes": 1001,
+      "nb_total": 1001,
+      "taux_pct": 100.0
+    },
+    "Paris 17e": {
+      "nb_captes": 871,
+      "nb_total": 871,
+      "taux_pct": 100.0
+    }
+  },
+  "alerte_couverture": false,
+  "alertes": []
+}
